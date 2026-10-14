@@ -6,6 +6,8 @@ Engineering guidance for a privacy-by-design DNS data library. This is not legal
 
 A Clojure library. It does not run a resolver, forward queries, or parse the DNS wire protocol. The caller runs the resolver and passes events to the library.
 
+Obligation-by-obligation status is in [`checklist.md`](checklist.md).
+
 ## 2. Data flows and obligations
 
 | # | Flow | Library action | PDPA obligation |
@@ -38,8 +40,24 @@ Upstream forwarding is out of scope. Transfer (s26) is a caller responsibility: 
 - **Raw IP (D7).** The record holds a raw client IP for the window. Minimisation would drop it. The window is the same as the record, so exposure is bounded but real. Tests confirm the raw IP is dropped at purge.
 - **Key rotation.** Rotating the HMAC key breaks token continuity. Counts across a rotation boundary are not comparable.
 - **NAT.** Clients behind one NAT IP share a token.
-- **eTLD+1 accuracy.** The bundled suffix list is a fixture. Production needs the full Public Suffix List. Wrong suffixes can merge unrelated domains.
+- **eTLD+1 accuracy.** The library uses the pinned Public Suffix List in `resources/psl/public_suffix_list.dat` (version in the file header, SHA-256 `ba7d836c…2612`). The list is a snapshot. Refresh it deliberately and re-run the tests; a stale list can merge or split domains incorrectly.
 - **Query names can be personal.** A subdomain can reveal a clinic or bank relationship. `etld1` is the default for this reason.
+
+### Raw IP and retention (D7) — operator notes
+
+- Raw IP is written only when the caller passes `:keep-raw-ip? true`. The default record has no raw IP.
+- When raw IP is kept, it shares the record's retention window. `pdns.retention/partition-by-age` returns the whole record for purge, so the raw IP leaves with it.
+- Do not keep raw IP in a store that outlives the window (backups, exports, analytics copies). Those copies are outside this library and must follow the same window.
+
+### Key rotation procedure
+
+1. Generate a new key with at least 32 random bytes. Store it in the secret manager. Never commit it.
+2. Stop writing with the old key. From that point, all new tokens use the new key.
+3. Keep the old key only as long as the old records are retained (the retention window). Lookups for those records need the old key.
+4. After the last old record is purged, destroy the old key.
+5. Record the rotation date. Counts that span the date are not comparable, because the same client has a different token before and after.
+
+`pdns.pseudonym-test` checks that the same IP gives a different token under a different key, and the same token under the same key.
 
 ## 5. Known issues in pdpa-sg-clj
 

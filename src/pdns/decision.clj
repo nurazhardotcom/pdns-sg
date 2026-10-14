@@ -10,10 +10,10 @@
 (defn decide
   "Return {:action :allow|:block, :reason keyword, :domain string}.
 
-  opts: {:blocklist set-of-etld1-strings, :suffixes optional PSL set}"
-  [query-name {:keys [blocklist suffixes] :or {blocklist #{}}}]
+  opts: {:blocklist set-of-etld1-strings, :psl optional parsed PSL}"
+  [query-name {:keys [blocklist psl] :or {blocklist #{}}}]
   (let [n (names/normalise query-name)
-        domain (names/etld1 n (or suffixes names/fixture-suffixes))]
+        domain (names/etld1 n (or psl @names/default-psl))]
     (if (contains? blocklist domain)
       {:action :block :reason :blocklist-match :domain domain}
       {:action :allow :reason :not-listed :domain domain})))

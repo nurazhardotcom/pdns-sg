@@ -7,14 +7,32 @@
   (is (= "example.test" (names/normalise "  example.test  ")))
   (is (thrown? clojure.lang.ExceptionInfo (names/normalise "   "))))
 
-(deftest etld1-extraction
-  (testing "subdomain collapses to registrable domain"
-    (is (= "example.test" (names/etld1 "a.b.example.test"))))
-  (testing "multi-label public suffix (fixture)"
-    (is (= "example.com.sg" (names/etld1 "www.example.com.sg")))
-    (is (= "example.co.uk" (names/etld1 "shop.example.co.uk"))))
-  (testing "name already at eTLD+1 is unchanged"
-    (is (= "example.test" (names/etld1 "example.test")))))
+(deftest parse-psl-rule-types
+  (let [psl (names/parse-psl "// comment\n\ncom\n*.ck\n!www.ck\n")]
+    (is (= #{"com"} (:rules psl)))
+    (is (= #{"ck"} (:wild psl)))
+    (is (= #{"www.ck"} (:exceptions psl)))))
+
+(deftest etld1-with-pinned-list
+  (testing "plain suffix: multi-label ICANN entries"
+    (is (= "example.co.uk" (names/etld1 "shop.example.co.uk")))
+    (is (= "example.com.sg" (names/etld1 "www.example.com.sg"))))
+  (testing "private-section suffix (github.io) is a public suffix"
+    (is (= "alice.github.io" (names/etld1 "www.alice.github.io")))
+    (is (= "alice.github.io" (names/etld1 "alice.github.io"))))
+  (testing "name at eTLD+1 is unchanged"
+    (is (= "example.test" (names/etld1 "example.test"))))
+  (testing "a bare public suffix is returned unchanged"
+    (is (= "co.uk" (names/etld1 "co.uk")))))
+
+(deftest etld1-wildcard-and-exception
+  (testing "wildcard *.ck: one extra label is part of the suffix"
+    (is (= "foo.bar.ck" (names/etld1 "x.foo.bar.ck"))))
+  (testing "exception !www.ck: www.ck is the registrable domain"
+    (is (= "www.ck" (names/etld1 "a.www.ck")))))
+
+(deftest etld1-unknown-tld-uses-implicit-rule
+  (is (= "example.invalid" (names/etld1 "a.b.example.invalid"))))
 
 (deftest apply-mode-dispatch
   (testing ":etld1 stores registrable domain"

@@ -18,17 +18,17 @@
   event:  {:client-ip string, :query-name string, :ts java.time.Instant}
   opts:   {:cfg validated-config (from pdns.config/config),
            :hmac-key key (for client token and :hashed names),
-           :suffixes  optional public-suffix set,
+           :psl       optional parsed PSL (pdns.names/parse-psl), default pinned list,
            :keep-raw-ip? boolean (default false)}"
   [{:keys [client-ip query-name ts]}
-   {:keys [cfg hmac-key suffixes keep-raw-ip?]
+   {:keys [cfg hmac-key psl keep-raw-ip?]
     :or {keep-raw-ip? false}}]
   (let [cfg (config/config cfg)
         _ (when (or (nil? ts) (not (instance? java.time.Instant ts)))
             (throw (ex-info ":ts must be a java.time.Instant" {})))
         stored-name (names/apply-mode (:name-mode cfg) query-name
                                       {:hash-fn (hash-fn-for {:hmac-key hmac-key})
-                                       :suffixes (or suffixes names/fixture-suffixes)})
+                                       :psl (or psl @names/default-psl)})
         base {:client-token (pseudo/client-token hmac-key client-ip)
               :name stored-name
               :name-mode (:name-mode cfg)
