@@ -49,13 +49,11 @@ All test data is fictional: `203.0.113.0/24`, `2001:db8::/32`, `example.test`.
 
 ## Status
 
-Library and tests are complete. Open work is tracked in [issues](https://github.com/nurazhardotcom/pdns-sg/issues):
+Library, tests, PSL, checklist mapping, and key-rotation docs are complete. Open work is tracked in [issues](https://github.com/nurazhardotcom/pdns-sg/issues):
 
-- Statute citations and PDPC primary-source verification (#2, #3)
+- Statute citations (s26, s26B-D, s48J) (#2)
+- PDPC primary-source verification for NRIC and GenAI guidance (#3)
 - Identifying the 13 Oct 2026 PDPC announcement (#4)
-- Full Public Suffix List (#5)
-- Checklist mapping (#6)
-- Raw-IP and key-rotation documentation (#7)
 
 ## Limits
 
