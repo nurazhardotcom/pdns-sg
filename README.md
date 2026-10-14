@@ -31,6 +31,9 @@ This is a portfolio project. It is a Clojure library with no network service and
 
 (decision/decide "clinic.example.test" {:blocklist #{"example.test"}})
 ;; => {:action :block :reason :blocklist-match :domain "example.test"}
+
+(retention/partition-by-age [record] (java.time.Instant/now) 7)
+;; => {:keep [record] :purge []}
 ```
 
 The HMAC key is never stored by the library. For the demo, `pdns.env/hmac-key-from-env` reads `PDNS_HMAC_KEY`.
@@ -43,6 +46,16 @@ clojure -M:test           # JVM (test-runner alias)
 ```
 
 All test data is fictional: `203.0.113.0/24`, `2001:db8::/32`, `example.test`.
+
+## Status
+
+Library and tests are complete. Open work is tracked in [issues](https://github.com/nurazhardotcom/pdns-sg/issues):
+
+- Statute citations and PDPC primary-source verification (#2, #3)
+- Identifying the 13 Oct 2026 PDPC announcement (#4)
+- Full Public Suffix List (#5)
+- Checklist mapping (#6)
+- Raw-IP and key-rotation documentation (#7)
 
 ## Limits
 
