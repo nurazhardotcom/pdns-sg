@@ -1,0 +1,16 @@
+{:min-bb-version "1.4.0"
+ :paths ["src" "test"]
+ :tasks
+ {test
+  (let [_ (require 'pdns.config-test 'pdns.names-test 'pdns.pseudonym-test
+                   'pdns.log-test 'pdns.retention-test 'pdns.decision-test
+                   'pdns.env-test)
+        results ((requiring-resolve 'clojure.test/run-tests)
+                 'pdns.config-test
+                 'pdns.names-test
+                 'pdns.pseudonym-test
+                 'pdns.log-test
+                 'pdns.retention-test
+                 'pdns.decision-test
+                 'pdns.env-test)]
+    (System/exit (if (and (zero? (:fail results)) (zero? (:error results))) 0 1)))}}
